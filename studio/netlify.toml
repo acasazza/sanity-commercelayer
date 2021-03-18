@@ -1,0 +1,9 @@
+[build]
+  base = "studio"
+  publish = "/dist"
+  command = "npm run build"
+  
+[[redirects]]
+  from = "/studio/*"
+  to = "/studio/"
+  status = 200
