@@ -10,10 +10,12 @@ import {
   SanityVariant,
 } from './typings'
 
+console.log('projectId', process.env.SANITY_PROJECT_ID)
+
 const client = sanityClient({
   projectId: process.env.SANITY_PROJECT_ID as string,
   dataset: process.env.SANITY_DATASET as string,
-  token: process.env.SANITY_TOKEN as string, // or leave blank to be anonymous user
+  // token: process.env.SANITY_TOKEN as string, // or leave blank to be anonymous user
   useCdn: process.env.NODE_ENV === 'production', // `false` if you want to ensure fresh data
 })
 

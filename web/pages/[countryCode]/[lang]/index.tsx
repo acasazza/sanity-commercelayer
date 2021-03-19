@@ -58,7 +58,7 @@ const FilterPage: NextPage<Props> = ({
   const parseUrl = queryString.parseUrl(asPath)
   const showSearch = _.has(parseUrl.query, 'searchBy')
   const [activeAlgolia, setActiveAlgolia] = useState(showSearch)
-  const code = country?.code.toLowerCase()
+  const code = country?.code?.toLowerCase()
   const marketId = country?.marketId || 'all'
   const token = useGetToken({
     clientId,
@@ -185,32 +185,29 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const {
-    BUILD_COUNTRY,
-    CL_CLIENT_ID,
-    CL_ENDPOINT,
-    BUILD_LANGUAGES,
-    BUILD_CMS,
-    BUILD_SEARCH_ENGINE,
-  } = process.env
   try {
     const lang = params?.lang as string
-    const cms = BUILD_CMS
-    const countryCode = params?.countryCode || BUILD_COUNTRY?.toLowerCase()
+    const cms = process.env.BUILD_CMS
+    const countryCode = params?.countryCode || process.env.BUILD_COUNTRY?.toLowerCase()
     const countries = _.has(cmsFunctions, `${cms}AllCountries`)
       ? await cmsFunctions[`${cms}AllCountries`](lang)
       : {}
+    console.log(`countries`, countries)
     const buildLanguages = _.compact(
-      BUILD_LANGUAGES?.split(',').map((l) => {
-        const country = countries.find(
-          (country: Country) => country.code === parseLanguageCode(l)
-        )
+      process.env.BUILD_LANGUAGES?.split(',').map((l) => {
+        const country = !_.isEmpty(countries)
+          ? countries.find(
+              (country: Country) => country.code === parseLanguageCode(l)
+            )
+          : {}
         return !_.isEmpty(country) ? country : null
       })
     )
-    const country = countries.find(
-      (country: Country) => country.code.toLowerCase() === countryCode
-    )
+    const country = !_.isEmpty(countries)
+      ? countries.find(
+          (country: Country) => country.code.toLowerCase() === countryCode
+        )
+      : {}
     const taxonomies = _.has(cmsFunctions, `${cms}AllTaxonomies`)
       ? await cmsFunctions[`${cms}AllTaxonomies`](country.catalog.id, lang)
       : {}
@@ -219,10 +216,10 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         country,
         countries,
         taxonomies,
-        clientId: CL_CLIENT_ID,
-        endpoint: CL_ENDPOINT,
+        clientId: process.env.CL_CLIENT_ID,
+        endpoint: process.env.CL_ENDPOINT,
         buildLanguages,
-        searchEngine: BUILD_SEARCH_ENGINE || '',
+        searchEngine: process.env.BUILD_SEARCH_ENGINE || '',
         lang,
         cms,
       },
@@ -232,8 +229,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     console.error(err)
     return {
       props: {
-        clientId: CL_CLIENT_ID,
-        endpoint: CL_ENDPOINT,
+        clientId: process.env.CL_CLIENT_ID,
+        endpoint: process.env.CL_ENDPOINT,
         errors: err.message,
       },
       revalidate: 60,
